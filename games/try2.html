@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>3D Block Puzzle Adventure</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header id="hud">
+    <div class="logo">3D BLOCK PUZZLE</div>
+    <div class="stats">
+      Score: <span id="score">0</span> |
+      Best: <span id="best">0</span> |
+      Matches: <span id="games">0</span>
+    </div>
+  </header>
+  <canvas id="board" width="440" height="440"></canvas>
+  <script src="game.js" type="module"></script>
+</body>
+</html>
+<style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, sans-serif; }
+body { background: #1a1a1a; color: #f0f0f0; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
+#hud { width: 100%; max-width: 440px; display: flex; justify-content: space-between; align-items: center; padding: 12px; background: rgba(0,0,0,0.5); }
+.logo { font-weight: bold; font-size: 1.1rem; }
+.stats { font-size: 0.95rem; }
+canvas { touch-action: none; width: 100%; max-width: 440px; height: auto; border-radius: 10px; box-shadow: 0 6px 16px rgba(0,0,0,0.7); }
+
+</style>
+<script>
+    const canvas = document.getElementById('board');
+const ctx = canvas.getContext('2d');
+const hud = {
+  score: document.getElementById('score'),
+  best: document.getElementById('best'),
+  games: document.getElementById('games')
+};
+
+const GRID_SIZE = 8;
+const CELL_SIZE = 52;
+const COLORS = ['#00b0ff', '#ff4081', '#7c4dff', '#64dd17', '#ff9100', '#d500f9'];
+const ISO_X = Math.cos(Math.PI / 6);
+const ISO_Y = Math.sin(Math.PI / 6);
+canvas.width = ISO_X * CELL_SIZE * GRID_SIZE + ISO_X * CELL_SIZE;
+canvas.height = ISO_Y * CELL_SIZE * GRID_SIZE + CELL_SIZE;
+
+let board = [];
+let currentScore = 0;
+let bestScore = 0;
+let matchCount = 0;
+let activePiece = [];
+
+const randomInt = (max) => Math.floor(Math.random() * max);
+
+function seededShuffle(array, seed) {
+  for (let i = array.length - 1; i > 0; i--) {
+    seed = (seed * 9301 + 49297) % 233280;
+    const j = seed % (i + 1);
+    [array[i], array[j]] = [array[j], array[i]];
+  }
+  return array;
+}
+
+function isoCoordX(x, y) { return (x - y) * ISO_X * CELL_SIZE + canvas.width / 2 - CELL_SIZE; }
+function isoCoordY(x, y) { return (x + y) * ISO_Y * CELL_SIZE; }
+
+function renderCell(x, y, color) {
+  ctx.beginPath();
+  ctx.moveTo(isoCoordX(x, y), isoCoordY(x, y));
+  ctx.lineTo(isoCoordX(x + 1, y), isoCoordY(x + 1, y));
+  ctx.lineTo(isoCoordX(x + 1, y + 1), isoCoordY(x + 1, y + 1));
+  ctx.lineTo(isoCoordX(x, y + 1), isoCoordY(x, y + 1));
+  ctx.closePath();
+  ctx.fillStyle = color;
+  ctx.strokeStyle = '#00000033';
+  ctx.lineWidth = 2;
+  ctx.fill();
+  ctx.stroke();
+}
+
+function resetBoard() {
+  board = Array.from({ length: GRID_SIZE }, () => Array(GRID_SIZE).fill(0));
+}
+
+function generatePiece() {
+  const pieces = [
+    [[0,0], [1,0], [0,1]],
+    [[0,0], [1,0], [2,0]],
+    [[0,0], [0,1], [0,2]],
+    [[0,0], [1,0], [1,1]],
+    [[1,0], [0,1], [1,1]],
+    [[0,0], [1,0], [1,1], [2,1]]  // Added a new shape for variety
+  ];
+  let piece = pieces[randomInt(pieces.length)].map(p => [...p]);
+  const rotations = randomInt(4);
+  for (let i = 0; i < rotations; i++) {
+    piece = piece.map(([x, y]) => [y, -x]);
+  }
+  return piece;
+}
+
+function placePiece() {
+  activePiece = generatePiece();
+  const startX = Math.floor(GRID_SIZE / 2) - 1;
+  const startY = 0;
+  for (const [dx, dy] of activePiece) {
+    const x = startX + dx;
+    const y = startY + dy;
+    if (y >= GRID_SIZE || x < 0 || x >= GRID_SIZE || board[y][x]) {
+      return endMatch();
+    }
+  }
+  for (const [dx, dy] of activePiece) {
+    board[startY + dy][startX + dx] = 1;
+  }
+  currentScore += activePiece.length;
+  refreshHud();
+  renderBoard();
+}
+
+function removeFullLines() {
+  board = board.filter(row => row.some(cell => cell === 0));
+  while (board.length < GRID_SIZE) {
+    board.unshift(Array(GRID_SIZE).fill(0));
+  }
+}
+
+function refreshHud() {
+  hud.score.textContent = currentScore;
+  if (currentScore > bestScore) {
+    bestScore = currentScore;
+    hud.best.textContent = bestScore;
+  }
+}
+
+function endMatch() {
+  matchCount++;
+  hud.games.textContent = matchCount;
+  currentScore = 0;
+  refreshHud();
+  resetBoard();
+  renderBoard();
+}
+
+function renderBoard() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  for (let y = 0; y < GRID_SIZE; y++) {
+    for (let x = 0; x < GRID_SIZE; x++) {
+      if (board[y][x]) {
+        renderCell(x, y, COLORS[(x + y + matchCount) % COLORS.length]);  // Vary colors per match
+      }
+    }
+  }
+}
+
+canvas.addEventListener('pointerup', () => {
+  removeFullLines();
+  placePiece();
+});
+
+(function initialize() {
+  resetBoard();
+  renderBoard();
+  placePiece();  // Start with first piece
+})();
+
+</script>

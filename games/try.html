@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Block Puzzle 3D</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="scoreboard">
+    <h1>Score: <span id="score">0</span></h1>
+  </div>
+  <canvas id="gameCanvas"></canvas>
+  <script src="script.js"></script>
+</body>
+</html>
+<style>
+    * {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background: #1a1a1a;
+  color: white;
+  font-family: Arial, sans-serif;
+  overflow: hidden;
+}
+
+#scoreboard {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  z-index: 10;
+  font-size: 1.5em;
+}
+
+canvas {
+  display: block;
+  width: 100vw;
+  height: 100vh;
+  background: #222;
+}
+
+</style>
+<script>
+    const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+
+const gridCols = 10;
+const gridRows = 20;
+const blockSize = Math.floor(Math.min(canvas.width / gridCols, canvas.height / gridRows));
+let score = 0;
+
+const scoreElement = document.getElementById("score");
+
+// Create grid
+let grid = [];
+function initGrid() {
+  grid = Array.from({ length: gridRows }, () => Array(gridCols).fill(0));
+}
+
+// Random block shape
+function randomBlock() {
+  const shapes = [
+    [[1, 1, 1], [0, 1, 0]],
+    [[1, 1], [1, 1]],
+    [[1, 1, 0], [0, 1, 1]],
+    [[0, 1, 1], [1, 1, 0]],
+    [[1, 1, 1, 1]]
+  ];
+  return shapes[Math.floor(Math.random() * shapes.length)];
+}
+
+let currentBlock = {
+  shape: randomBlock(),
+  x: 3,
+  y: 0,
+};
+
+function drawBlock(x, y, color = '#0f0') {
+  ctx.fillStyle = color;
+  ctx.fillRect(x * blockSize, y * blockSize, blockSize - 2, blockSize - 2);
+}
+
+function draw3D(x, y, baseColor = '#0f0') {
+  const light = '#3f3';
+  const shadow = '#070';
+
+  drawBlock(x, y, baseColor);
+  ctx.fillStyle = light;
+  ctx.fillRect(x * blockSize, y * blockSize, blockSize / 2, 2);
+  ctx.fillStyle = shadow;
+  ctx.fillRect(x * blockSize, y * blockSize + blockSize - 2, blockSize, 2);
+}
+
+function drawGrid() {
+  for (let y = 0; y < gridRows; y++) {
+    for (let x = 0; x < gridCols; x++) {
+      if (grid[y][x]) draw3D(x, y);
+    }
+  }
+}
+
+function drawCurrentBlock() {
+  const { shape, x, y } = currentBlock;
+  for (let i = 0; i < shape.length; i++) {
+    for (let j = 0; j < shape[i].length; j++) {
+      if (shape[i][j]) draw3D(x + j, y + i, '#0ff');
+    }
+  }
+}
+
+function mergeBlock() {
+  const { shape, x, y } = currentBlock;
+  shape.forEach((row, i) => {
+    row.forEach((cell, j) => {
+      if (cell) grid[y + i][x + j] = 1;
+    });
+  });
+}
+
+function clearLines() {
+  let lines = 0;
+  grid = grid.filter(row => {
+    if (row.every(cell => cell)) {
+      lines++;
+      return false;
+    }
+    return true;
+  });
+  while (grid.length < gridRows) grid.unshift(Array(gridCols).fill(0));
+  score += lines * 10;
+  scoreElement.textContent = score;
+}
+
+function canMove(dx, dy, shape = currentBlock.shape) {
+  for (let i = 0; i < shape.length; i++) {
+    for (let j = 0; j < shape[i].length; j++) {
+      if (shape[i][j]) {
+        const newX = currentBlock.x + j + dx;
+        const newY = currentBlock.y + i + dy;
+        if (
+          newX < 0 || newX >= gridCols ||
+          newY >= gridRows || (newY >= 0 && grid[newY][newX])
+        ) return false;
+      }
+    }
+  }
+  return true;
+}
+
+function rotateBlock() {
+  const rotated = currentBlock.shape[0].map((_, i) =>
+    currentBlock.shape.map(row => row[i]).reverse()
+  );
+  if (canMove(0, 0, rotated)) currentBlock.shape = rotated;
+}
+
+function gameOver() {
+  alert("Game Over! Score: " + score);
+  score = 0;
+  scoreElement.textContent = score;
+  initGrid();
+  currentBlock = { shape: randomBlock(), x: 3, y: 0 };
+}
+
+function update() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  if (canMove(0, 1)) {
+    currentBlock.y++;
+  } else {
+    mergeBlock();
+    clearLines();
+    currentBlock = { shape: randomBlock(), x: 3, y: 0 };
+    if (!canMove(0, 0)) gameOver();
+  }
+
+  drawGrid();
+  drawCurrentBlock();
+}
+
+initGrid();
+setInterval(update, 500);
+
+// Controls
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'ArrowLeft' && canMove(-1, 0)) currentBlock.x--;
+  if (e.key === 'ArrowRight' && canMove(1, 0)) currentBlock.x++;
+  if (e.key === 'ArrowDown' && canMove(0, 1)) currentBlock.y++;
+  if (e.key === 'ArrowUp') rotateBlock();
+});
+
+</script>
