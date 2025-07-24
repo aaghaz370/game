@@ -102,60 +102,66 @@
   <div class="header">🎮 100+ Mini Games</div>
 
   <div class="grid">
-    <!-- Sample with full custom path -->
-    <div class="card" onclick="openGame('game/tictactoe.html')">
+    <!-- Repeat for 100 games -->
+    <!-- Use different image URLs or same for now -->
+    <!-- game1.html, game2.html... etc -->
+
+    <!-- Sample 1-12 shown here -->
+    <div class="card" onclick="openGame(1)">
       <img src="https://cdn-icons-png.flaticon.com/512/2076/2076261.png" />
       <span>Tic Tac Toe</span>
     </div>
-    <div class="card" onclick="openGame('cube/index.html')">
+    <div class="card" onclick="openGame(2)">
       <img src="https://cdn-icons-png.flaticon.com/512/480/480382.png "/>
       <span>Cube</span>
     </div>
-    <div class="card" onclick="openGame('snake.html')">
+    <div class="card" onclick="openGame(3)">
       <img src="https://cdn-icons-png.flaticon.com/512/3669/3669984.png" />
       <span>Snake Game</span>
     </div>
-    <div class="card" onclick="openGame('html-css-javascript-games/01-Candy-Crush-Game/index.html')">
+    <div class="card" onclick="openGame(4)">
       <img src="https://cdn-icons-png.flaticon.com/512/929/929470.png" />
       <span>Color Match</span>
     </div>
-    <div class="card" onclick="openGame('html-css-javascript-games/26-Fruit-Slicer-Game/index.html')">
+    <div class="card" onclick="openGame(5)">
       <img src="https://cdn-icons-png.flaticon.com/512/3062/3062634.png" />
       <span>Whack-a-Mole</span>
     </div>
-    <div class="card" onclick="openGame('puzzle/slide.html')">
+    <div class="card" onclick="openGame(6)">
       <img src="https://cdn-icons-png.flaticon.com/512/3261/3261399.png" />
       <span>Puzzle Slide</span>
     </div>
-    <div class="card" onclick="openGame('2048.html')">
+    <div class="card" onclick="openGame(7)">
       <img src="https://cdn-icons-png.flaticon.com/512/1589/1589590.png" />
       <span>2048</span>
     </div>
-    <div class="card" onclick="openGame('javascript-racer/index.html')">
+    <div class="card" onclick="openGame(8)">
       <img src="https://cdn-icons-png.flaticon.com/512/2095/2095061.png" />
       <span>Catch Fruit</span>
     </div>
-    <div class="card" onclick="openGame('space/index.html')">
+    <div class="card" onclick="openGame(9)">
       <img src="https://cdn-icons-png.flaticon.com/512/4208/4208460.png" />
       <span>Space Shooter</span>
     </div>
-    <div class="card" onclick="openGame('brick.html')">
+    <div class="card" onclick="openGame(10)">
       <img src="https://cdn-icons-png.flaticon.com/512/1007/1007310.png" />
       <span>Brick Breaker</span>
     </div>
-    <div class="card" onclick="openGame('quiz/index.html')">
+    <div class="card" onclick="openGame(11)">
       <img src="https://cdn-icons-png.flaticon.com/512/1946/1946488.png" />
       <span>Quiz Game</span>
     </div>
-    <div class="card" onclick="openGame('maze/escape.html')">
+    <div class="card" onclick="openGame(12)">
       <img src="https://cdn-icons-png.flaticon.com/512/4072/4072397.png" />
       <span>Maze Escape</span>
     </div>
+
+    <!-- Repeat similar blocks till 100+ -->
   </div>
 
   <script>
-    function openGame(path) {
-      window.location.href = path;
+    function openGame(id) {
+      window.location.href = `games/game${id}.html`;
     }
   </script>
 </body>
